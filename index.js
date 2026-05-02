@@ -1,28 +1,42 @@
-const { default: makeWASocket, useMultiFileAuthState } = require("@whiskeysockets/baileys")
-const qrcode = require("qrcode-terminal")
-const { Groq } = require("groq-sdk")
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const Groq = require('groq-sdk');
 
-async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys')
-    const sock = makeWASocket({ auth: state, printQRInTerminal: true })
-    sock.ev.on('connection.update', ({ qr }) => {
-        if(qr) {
-            console.log('*** SCAN THIS QR NOW ***')
-            qrcode.generate(qr, {small: true})
+const groq = new Groq({
+    apiKey: process.env.GROQ_API_KEY
+});
+
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
+    }
+});
+
+client.on('qr', (qr) => {
+    console.log('QR کوډ سکین کړه:');
+    qrcode.generate(qr, { small: true });
+});
+
+client.on('ready', () => {
+    console.log('بوټ چالان شو! ✅');
+});
+
+client.on('message', async (message) => {
+    if (message.body) {
+        try {
+            const chatCompletion = await groq.chat.completions.create({
+                messages: [{ role: "user", content: message.body }],
+                model: "llama-3.1-8b-instant",
+            });
+            const reply = chatCompletion.choices[0]?.message?.content || "بخښنه، ځواب نشم ورکولی";
+            message.reply(reply);
+        } catch (error) {
+            console.error('Groq Error:', error);
+            message.reply('بخښنه، یوه ستونزه راغله 😔');
         }
-    })
-    sock.ev.on('creds.update', saveCreds)
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-        const msg = messages[0]
-        if(!msg.message || msg.key.fromMe) return
-        const text = msg.message.conversation || msg.message.extendedTextMessage?.text
-        if(!text) return
-        const chat = await groq.chat.completions.create({
-            messages: [{ role: 'user', content: text }],
-            model: 'llama-3.1-8b-instant'
-        })
-        await sock.sendMessage(msg.key.remoteJid, { text: chat.choices[0].message.content })
-    })
-}
-startBot()
+    }
+});
+
+client.initialize();
