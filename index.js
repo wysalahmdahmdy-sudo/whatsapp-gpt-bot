@@ -15,11 +15,6 @@ const client = new Client({
     pairingCode: true,
 });
 
-client.on('qr', (qr) => {
-    console.log('QR کوډ سکین کړه:');
-    qrcode.generate(qr, { small: true });
-});
-
 client.on('code', (code) => {
     console.log('*** Pairing Code:', code, '***');
     console.log('*** دا کوډ په WhatsApp کې ولیکه ***');
