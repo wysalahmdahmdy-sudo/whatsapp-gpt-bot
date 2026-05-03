@@ -13,7 +13,6 @@ const client = new Client({
         args: ['--no-sandbox', '--disable-setuid-sandbox']
     },
     pairingCode: true,
-    qrMaxRetries: 0
 });
 
 client.on('qr', (qr) => {
