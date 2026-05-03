@@ -6,12 +6,12 @@
     "start": "node index.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.6.0",
-    "groq-sdk": "^0.5.0",
-    "axios": "^1.7.2",
-    "pino": "^9.0.0"
+    "@whiskeysockets/baileys": "6.5.0",
+    "groq-sdk": "0.5.0",
+    "axios": "1.7.2",
+    "pino": "9.0.0"
   }
 }
