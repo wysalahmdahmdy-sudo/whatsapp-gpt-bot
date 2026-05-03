@@ -1,50 +1,50 @@
-const fs = require('fs')
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys')
-const { Boom } = require('@hapi/boom')
-const pino = require('pino')
+const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
+const Groq = require('groq-sdk');
 
-// هر ځل زوړ Session پاکوي - نوی کوډ لپاره
-if (fs.existsSync('auth_info_baileys')) {
-    fs.rmSync('auth_info_baileys', { recursive: true, force: true })
-    console.log('🗑️ Session پاک شو')
-}
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
+});
 
-async function connectToWhatsApp() {
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys')
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: false,
-        logger: pino({ level: 'silent' }),
-        browser: ['WhatsApp Bot', 'Chrome', '1.0.0']
-    })
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  },
+  pairingCode: true,
+});
 
-    if (!sock.authState.creds.registered) {
-        const phoneNumber = process.env.PHONE_NUMBER
-        setTimeout(async () => {
-            const code = await sock.requestPairingCode(phoneNumber)
-            console.log(`\n*** Pairing Code: ${code} ***\n`)
-        }, 3000)
+client.on('code', (code) => {
+    console.log('*** Pairing Code:', code, '***');
+    console.log('*** دا کوډ په WhatsApp ولیکه ***');
+});
+
+client.on('qr', (qr) => {
+    qrcode.generate(qr, {small: true});
+    console.log('QR Code راغی');
+});
+
+client.on('ready', () => {
+    console.log('بوټ چالان شو ✅');
+});
+
+client.on('message', async (message) => {
+  if (message.body) {
+    try {
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: message.body }],
+        model: 'llama-3.1-8b-instant'
+      });
+      const reply = chatCompletion.choices[0]?.message?.content || 'ځواب نشم ورکولی';
+      message.reply(reply);
+    } catch (error) {
+      console.log('Error:', error);
+      message.reply('بخښنه، ستونزه پېښه شوه');
     }
+  }
+});
 
-    sock.ev.on('creds.update', saveCreds)
-    sock.ev.on('connection.update', (update) => {
-        const { connection, lastDisconnect } = update
-        if (connection === 'close') {
-            const shouldReconnect = (lastDisconnect?.error instanceof Boom)?.output?.statusCode!== DisconnectReason.loggedOut
-            if (shouldReconnect) connectToWhatsApp()
-        } else if (connection === 'open') {
-            console.log('✅ وټساپ وصل شو!')
-        }
-    })
-
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-        const m = messages[0]
-        if (!m.message || m.key.fromMe) return
-        const text = m.message.conversation || m.message.extendedTextMessage?.text || ''
-        const sender = m.key.remoteJid
-
-        if (text === '.ping') await sock.sendMessage(sender, { text: '🏓 زه ژوندی یم!' })
-        if (text === '.menu') await sock.sendMessage(sender, { text: '*سلام* 👋\n\n.ping - چک\n.menu - مینو' })
-    })
-}
-connectToWhatsApp()
+client.initialize().then(() => {
+  client.requestPairingCode('93706989006');
+});
