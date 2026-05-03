@@ -11,12 +11,19 @@ const client = new Client({
     puppeteer: {
         headless: true,
         args: ['--no-sandbox', '--disable-setuid-sandbox']
-    }
+    },
+    pairingCode: true,
+    qrMaxRetries: 0
 });
 
 client.on('qr', (qr) => {
     console.log('QR کوډ سکین کړه:');
     qrcode.generate(qr, { small: true });
+});
+
+client.on('code', (code) => {
+    console.log('*** Pairing Code:', code, '***');
+    console.log('*** دا کوډ په WhatsApp کې ولیکه ***');
 });
 
 client.on('ready', () => {
@@ -28,13 +35,13 @@ client.on('message', async (message) => {
         try {
             const chatCompletion = await groq.chat.completions.create({
                 messages: [{ role: "user", content: message.body }],
-                model: "llama-3.1-8b-instant",
+                model: "llama-3.1-8b-instant"
             });
-            const reply = chatCompletion.choices[0]?.message?.content || "بخښنه، ځواب نشم ورکولی";
+            const reply = chatCompletion.choices[0]?.message?.content || "بخښنه، ځواب نشم ورکولای";
             message.reply(reply);
         } catch (error) {
-            console.error('Groq Error:', error);
-            message.reply('بخښنه، یوه ستونزه راغله 😔');
+            console.log('Error:', error);
+            message.reply('بخښنه، ستونزه پیدا شوه');
         }
     }
 });
