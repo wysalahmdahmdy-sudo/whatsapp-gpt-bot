@@ -40,5 +40,6 @@ client.on('message', async (message) => {
   }
 });
 
-client.initialize();
-client.requestPairingCode('93706989006');
+client.initialize().then(() => {
+  client.requestPairingCode('93706989006');
+});
