@@ -1,8 +1,8 @@
 [phases.setup]
-nixPkgs = ["nodejs-20_x", "google-chrome"]
+nixPkgs = ["nodejs_20", "google-chrome", "chromium"]
 
-[phases.build]
-cmds = ["npm install"]
+[phases.install]
+cmds = ["npm ci"]
 
 [start]
-cmd = "node index.js"
+cmd = "npm start"
