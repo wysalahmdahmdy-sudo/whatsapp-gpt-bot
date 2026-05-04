@@ -1,4 +1,5 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
 const Groq = require('groq-sdk');
 
 const groq = new Groq({
@@ -9,17 +10,32 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process']
-  },
-  qrMaxRetries: 0
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--no-first-run',
+      '--no-zygote',
+      '--single-process',
+      '--disable-gpu'
+    ]
+  }
 });
 
-client.on('qr', () => {
-    console.log('QR بند دی');
+client.on('qr', (qr) => {
+    console.log('================ QR CODE ================');
+    qrcode.generate(qr, { small: true });
+    console.log('========================================');
+    console.log('دا QR په موبایل کې سکن کړه');
+});
+
+client.on('authenticated', () => {
+    console.log('✅✅✅ Authentication بریالی شو!');
 });
 
 client.on('ready', () => {
-    console.log('✅ بوټ چالان شو');
+    console.log('✅ بوټ چالان شو او WhatsApp سره Connect شو');
 });
 
 client.on('message', async (message) => {
@@ -37,21 +53,3 @@ client.on('message', async (message) => {
 });
 
 client.initialize();
-
-// 15 ثانیې انتظار - دا مهمه ده
-setTimeout(async () => {
-    try {
-        console.log('⏳ د Pairing Code غوښتنه پیل شوه...');
-        const phoneNumber = '93706989006'; // خپل نمبر دلته چک کړه
-        console.log('نمبر:', phoneNumber);
-        const code = await client.requestPairingCode(phoneNumber);
-        console.log('');
-        console.log('========================================');
-        console.log('*** Pairing Code:', code, '***');
-        console.log('========================================');
-        console.log('');
-    } catch (err) {
-        console.log('❌ اصلي ستونزه:', err.message);
-        console.log('❌ ټول Error:', err);
-    }
-}, 15000); // 15 ثانیې
