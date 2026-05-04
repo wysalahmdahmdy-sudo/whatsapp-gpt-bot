@@ -1,5 +1,4 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
 const Groq = require('groq-sdk');
 
 const groq = new Groq({
@@ -10,23 +9,17 @@ const client = new Client({
   authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--single-process']
   },
-  pairingCode: true,
+  qrMaxRetries: 0
 });
 
-client.on('code', (code) => {
-    console.log('*** Pairing Code:', code, '***');
-    console.log('*** دا کوډ په WhatsApp ولیکه ***');
-});
-
-client.on('qr', (qr) => {
-    qrcode.generate(qr, {small: true});
-    console.log('QR Code راغی');
+client.on('qr', () => {
+    console.log('QR بند دی');
 });
 
 client.on('ready', () => {
-    console.log('بوټ چالان شو ✅');
+    console.log('✅ بوټ چالان شو');
 });
 
 client.on('message', async (message) => {
@@ -36,15 +29,29 @@ client.on('message', async (message) => {
         messages: [{ role: 'user', content: message.body }],
         model: 'llama-3.1-8b-instant'
       });
-      const reply = chatCompletion.choices[0]?.message?.content || 'ځواب نشم ورکولی';
-      message.reply(reply);
+      message.reply(chatCompletion.choices[0]?.message?.content || '...');
     } catch (error) {
-      console.log('Error:', error);
-      message.reply('بخښنه، ستونزه پېښه شوه');
+      console.log('Groq Error:', error);
     }
   }
 });
 
-client.initialize().then(() => {
-  client.requestPairingCode('93706989006');
-});
+client.initialize();
+
+// 15 ثانیې انتظار - دا مهمه ده
+setTimeout(async () => {
+    try {
+        console.log('⏳ د Pairing Code غوښتنه پیل شوه...');
+        const phoneNumber = '93706989006'; // خپل نمبر دلته چک کړه
+        console.log('نمبر:', phoneNumber);
+        const code = await client.requestPairingCode(phoneNumber);
+        console.log('');
+        console.log('========================================');
+        console.log('*** Pairing Code:', code, '***');
+        console.log('========================================');
+        console.log('');
+    } catch (err) {
+        console.log('❌ اصلي ستونزه:', err.message);
+        console.log('❌ ټول Error:', err);
+    }
+}, 15000); // 15 ثانیې
