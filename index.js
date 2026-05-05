@@ -1,71 +1,45 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const qrcode = require('qrcode-terminal');
+const Groq = require('groq-sdk');
 
-const PHONE_NUMBER = "93706989006";
-
-const client = new Client({
-    authStrategy: new LocalAuth(),
-    puppeteer: {
-        headless: true,
-        executablePath: '/usr/bin/chromium',
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote',
-            '--single-process'
-        ]
-    },
-    // دا مهم دی - مسیج راوستلو لپاره
-    webVersionCache: {
-        type: 'remote',
-        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-    }
+const groq = new Groq({
+  apiKey: process.env.GROQ_API_KEY
 });
 
-client.on('qr', (qr) => {
-    qrcode.generate(qr, {small: true});
+const client = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
+  },
+  pairingCode: true,
 });
 
 client.on('code', (code) => {
-    console.log('================================');
-    console.log('ستاسو 8 رقمي کوډ:', code);
-    console.log('================================');
+    console.log('*** Pairing Code:', code, '***');
+    console.log('*** دا کوډ په WhatsApp ولیکه ***');
 });
 
 client.on('ready', () => {
-    console.log('✅ بوټ چالان شو وروره!');
+    console.log('بوټ چالان شو ✅');
 });
 
-client.on('authenticated', () => {
-    console.log('✅ AUTHENTICATED');
-});
-
-// مهم: message_create وکاروه نه message
-client.on('message_create', async (message) => {
-    if (message.fromMe) return;
-    if (message.isGroupMsg) return;
-    
-    console.log('>>> نوی مسیج:', message.body);
-    
+client.on('message', async (message) => {
+  if (message.body) {
     try {
-        await message.reply('🤖 زه بوټ یم وروره! تاسو ولیکل: ' + message.body);
-        console.log('>>> ځواب واستول شو');
-    } catch (err) {
-        console.log('>>> Error:', err.message);
+      const chatCompletion = await groq.chat.completions.create({
+        messages: [{ role: 'user', content: message.body }],
+        model: 'llama-3.1-8b-instant'
+      });
+      const reply = chatCompletion.choices[0]?.message?.content || 'ځواب نشم ورکولی';
+      message.reply(reply);
+    } catch (error) {
+      console.log('Error:', error);
+      message.reply('بخښنه، ستونزه پېښه شوه');
     }
+  }
 });
 
-client.initialize();
-
-setTimeout(async () => {
-    try {
-        const pairingCode = await client.requestPairingCode(PHONE_NUMBER);
-        console.log('================================');
-        console.log('ستاسو 8 رقمي کوډ:', pairingCode);
-        console.log('================================');
-    } catch (err) {
-        console.log('Error:', err.message);
-    }
-}, 5000);
+client.initialize().then(() => {
+  client.requestPairingCode('93706989006');
+});
