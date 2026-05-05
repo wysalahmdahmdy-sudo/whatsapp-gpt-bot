@@ -1,8 +1,0 @@
-[phases.setup]
-nixPkgs = ['nodejs_20', 'chromium', 'glibc', 'glib.out', 'gobject-introspection', 'pango', 'cairo', 'gdk-pixbuf', 'nss', 'nspr', 'atk', 'at-spi2-atk', 'cups', 'dbus', 'gtk3', 'libdrm', 'libxkbcommon', 'libgbm', 'alsa-lib', 'xorg.libX11', 'xorg.libXcomposite', 'xorg.libXdamage', 'xorg.libXext', 'xorg.libXfixes', 'xorg.libXrandr', 'xorg.libxshmfence', 'fontconfig', 'freetype', 'gcc-unwrapped']
-
-[phases.build]
-cmds = ['npm install']
-
-[start]
-cmd = 'node index.js'
