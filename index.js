@@ -1,49 +1,37 @@
-client.on('message_create', async (message) => {
-    if (message.fromMe) return;
-    if (message.isGroupMsg) return;
+const { Client, LocalAuth } = require('whatsapp-web.js');
+
+const client = new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: { headless: true, args: ['--no-sandbox'] }
+});
+
+client.on('ready', () => console.log('✅ بوټ چالان شو +93706989006'));
+
+client.on('message_create', async msg => {
+    if (msg.fromMe || msg.isGroupMsg) return;
     
-    const msg = message.body.trim(); // toLowerCase لرې شو
-    console.log('>>> نوی مسیج:', message.body);
+    const text = msg.body;
     
-    try {
-        if (msg.includes('سلام')) {
-            await message.reply('💚🤖 وعلیکم السلام وروره!\nزه د +93706989006 بوټ یم\n\n`!help` ولیکه');
-        }
-        else if (msg.includes('ټوکه') || msg.includes('جوق') || msg === '!joke') {
-            const jokes = [
-                'ولې +93706989006 بوټ تل خوشحاله دی؟ ځکه Crash نه کیږي! 😂🚀',
-                'افغان له بوټ نه وپوښتل: پښتو پوهېږې؟ بوټ وویل: له تا نه ښه 😂🇦🇫',
-                '29 ساعته کوډ وهل اسانه دي خو بوټ چلول سخت دي 😂💪',
-                'بوټ ته یې وویل ستړی مه شې، ويې ویل: زه خو په Railway یم 🤖'
-            ];
-            await message.reply(jokes[Math.floor(Math.random() * jokes.length)]);
-        }
-        else if (msg.includes('پښتو') || msg.includes('پوهېږې') || msg.includes('پوهیږي') || msg.includes('هیري')) {
-            await message.reply('هو وروره! زه پښتو ډېره ښه پوهېږم 🇦🇫💚\n\n`ټوکه` ولیکه چې وخاندو 😂\nیا `!help` ولیکه');
-        }
-        else if (msg.includes('کمانډ') || msg === '!help') {
-            await message.reply(`🤖 د +93706989006 بوټ کمانډونه:\n\n!time - وخت\n!joke - ټوکه\n!ping - بوټ ژوندی دی\nسلام - روغبړ\nټوکه - یوه ټوکه\nپښتو - خبرې کوم 💚`);
-        }
-        else if (msg.includes('چا جوړ') || msg.includes('څوک یې جوړ')) {
-            await message.reply('زه د +93706989006 نمبر خاوند 29 ساعته کې جوړ کړم! 🇦🇫💪');
-        }
-        else if (msg.includes('څه کولای شې') || msg.includes('کولای شي')) {
-            await message.reply(`🤖 زه د +93706989006 بوټ یم\n\nزما کارونه:\n1. سلام 🤝\n2. ټوکه 😂\n3. وخت ⏰\n4. پښتو خبرې 🇦🇫\n\n`!help` ولیکه`);
-        }
-        else if (msg === '!time' || msg.includes('وخت')) {
-            const time = new Date().toLocaleTimeString('fa-AF', {timeZone: 'Asia/Kabul'});
-            await message.reply('⏰ د افغانستان وخت: ' + time + '\nبوټ: +93706989006');
-        }
-        else if (msg.includes('شمیره') || msg.includes('نمبر')) {
-            await message.reply('زما د مالک شمیره ده: +93706989006 📱');
-        }
-        else if (msg === '!ping') {
-            await message.reply('Pong! 🏓\nبوټ 100% ژوندی دی\nشمیره: +93706989006 🚀');
-        }
-        else {
-            await message.reply('وروره پښتو پوهېږم خو پدې پوه نشوم 🤔\n\n`ټوکه` ولیکه یا `!help` ولیکه');
-        }
-    } catch (err) {
-        console.log('>>> Error:', err.message);
+    if (text.includes('سلام')) {
+        msg.reply('وعلیکم السلام وروره 💚\n+93706989006');
+    }
+    else if (text.includes('ټوکه')) {
+        msg.reply('ولې بوټ نه ستړی کیږي؟ ځکه په سرور دی 😂🤖');
+    }
+    else if (text.includes('پښتو')) {
+        msg.reply('هو پښتو پوهېږم وروره 🇦🇫');
+    }
+    else if (text.includes('شمیره')) {
+        msg.reply('زما نمبر: +93706989006 📱');
+    }
+    else {
+        msg.reply('`سلام` یا `ټوکه` ولیکه 🤖');
     }
 });
+
+client.initialize();
+
+setTimeout(async () => {
+    const code = await client.requestPairingCode("93706989006");
+    console.log('>>> کوډ:', code);
+}, 3000);
