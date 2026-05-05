@@ -8,25 +8,15 @@ const client = new Client({
     puppeteer: {
         headless: true,
         executablePath: '/usr/bin/chromium',
-        args: [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
-            '--disable-gpu',
-            '--no-zygote',
-            '--single-process'
-        ]
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-zygote', '--single-process']
     },
-    // دا مهم دی - مسیج راوستلو لپاره
     webVersionCache: {
         type: 'remote',
         remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
     }
 });
 
-client.on('qr', (qr) => {
-    qrcode.generate(qr, {small: true});
-});
+client.on('qr', (qr) => { qrcode.generate(qr, {small: true}); });
 
 client.on('code', (code) => {
     console.log('================================');
@@ -34,38 +24,22 @@ client.on('code', (code) => {
     console.log('================================');
 });
 
-client.on('ready', () => {
-    console.log('✅ بوټ چالان شو وروره!');
-});
+client.on('ready', () => { console.log('✅ بوټ چالان شو وروره!'); });
 
-client.on('authenticated', () => {
-    console.log('✅ AUTHENTICATED');
-});
+client.on('authenticated', () => { console.log('✅ AUTHENTICATED'); });
 
-// مهم: message_create وکاروه نه message
 client.on('message_create', async (message) => {
     if (message.fromMe) return;
     if (message.isGroupMsg) return;
     
+    const msg = message.body.toLowerCase().trim();
     console.log('>>> نوی مسیج:', message.body);
     
     try {
-        await message.reply('🤖 زه بوټ یم وروره! تاسو ولیکل: ' + message.body);
-        console.log('>>> ځواب واستول شو');
-    } catch (err) {
-        console.log('>>> Error:', err.message);
-    }
-});
-
-client.initialize();
-
-setTimeout(async () => {
-    try {
-        const pairingCode = await client.requestPairingCode(PHONE_NUMBER);
-        console.log('================================');
-        console.log('ستاسو 8 رقمي کوډ:', pairingCode);
-        console.log('================================');
-    } catch (err) {
-        console.log('Error:', err.message);
-    }
-}, 5000);
+        if (msg.includes('سلام')) {
+            await message.reply('وعلیکم السلام وروره! 🤖💚\nزه ستا WhatsApp بوټ یم. `!help` ولیکه');
+        }
+        else if (msg.includes('چا جوړ') || msg.includes('څوک یې جوړ')) {
+            await message.reply('زه یو اتل افغان ورور 29 ساعته کې جوړ کړم! 🇦🇫💪');
+        }
+        else if (msg.includes('څه کول
