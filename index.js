@@ -1,6 +1,6 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
-console.log('>>> بوټ شروع شو...');
+console.log('>>> بوټ +93706989006 شروع شو');
 
 const client = new Client({
     authStrategy: new LocalAuth(),
@@ -10,38 +10,34 @@ const client = new Client({
     }
 });
 
-client.on('qr', (qr) => {
-    console.log('>>> QR کوډ جوړ شو. که 8 رقمي کوډ کار ونکړي دا Scan کړه');
-});
-
 client.on('ready', () => {
-    console.log('✅✅ بوټ وصل شو +93706989006 ✅✅✅');
-});
-
-client.on('auth_failure', (msg) => {
-    console.error('>>> AUTH FAILURE:', msg);
+    console.log('✅ بوټ وصل شو +93706989006');
 });
 
 client.on('message', async (msg) => {
-    console.log('>>> نوی مسیج:', msg.body);
-    if (msg.body === 'سلام') await msg.reply('وعلیکم السلام وروره 💚 +93706989006');
-    else if (msg.body === 'ټوکه') await msg.reply('29 ساعته وروسته جوړ شوم 😂');
-    else await msg.reply('سلام ولیکه');
+    if (msg.fromMe) return;
+    
+    const text = msg.body;
+    console.log('>>> مسیج:', text);
+    
+    if (text.includes('سلام')) {
+        await msg.reply('💚 وعلیکم السلام وروره!\nزه د +93706989006 بوټ یم\n\n`ټوکه` یا `څنګه یې` ولیکه');
+    }
+    else if (text.includes('څنګه') || text.includes('خنګه') || text.includes('ژوندی')) {
+        await msg.reply('ښه یم وروره شکر 💚\nته څنګه یې؟\nزه +93706989006 بوټ یم 🇦🇫');
+    }
+    else if (text.includes('ټوکه') || text.includes('جوق')) {
+        await msg.reply('😂 ولې بوټ 29 ساعته وروسته ژوندی شو؟\nځکه افغان یې جوړ کړ 💪🇦🇫\n+93706989006');
+    }
+    else if (text.includes('شمیره') || text.includes('نمبر')) {
+        await msg.reply('زما نمبر: +93706989006 📱');
+    }
+    else if (text.includes('چا جوړ') || text.includes('څوک')) {
+        await msg.reply('زه د +93706989006 خاوند جوړ کړم 🇦🇫💪');
+    }
+    else {
+        await msg.reply('وروره `سلام` `څنګه یې` یا `ټوکه` ولیکه 🤖\n+93706989006');
+    }
 });
 
 client.initialize();
-
-console.log('>>> د 8 رقمي کوډ غوښتلو لپاره 5 ثانیې انتظار...');
-
-setTimeout(async () => {
-    try {
-        console.log('>>> اوس کوډ غواړم...');
-        const code = await client.requestPairingCode("93706989006");
-        console.log('================================');
-        console.log('>>> ستاسو 8 رقمي کوډ +93706989006:', code);
-        console.log('================================');
-    } catch (err) {
-        console.log('>>> ERROR په کوډ کې:', err.message);
-        console.log('>>> QR به ښکاره شي. هغه Scan کړه');
-    }
-}, 5000);
