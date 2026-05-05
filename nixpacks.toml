@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs_20', 'chromium', 'glibc', 'glib', 'nss', 'nspr', 'atk', 'at-spi2-atk', 'cups', 'dbus', 'gtk3', 'libdrm', 'libxkbcommon', 'libgbm', 'alsa-lib', 'xorg.libX11', 'xorg.libXcomposite', 'xorg.libXdamage', 'xorg.libXext', 'xorg.libXfixes', 'xorg.libXrandr', 'xorg.libxshmfence', 'gcc-unwrapped']
+nixPkgs = ['nodejs_20', 'chromium', 'glibc', 'glib', 'nss', 'nspr', 'atk', 'at-spi2-atk', 'cups', 'dbus', 'gtk3', 'libdrm', 'libxkbcommon', 'libgbm', 'alsa-lib', 'xorg.libX11', 'xorg.libXcomposite', 'xorg.libXdamage', 'xorg.libXext', 'xorg.libXfixes', 'xorg.libXrandr', 'xorg.libxshmfence', 'gcc-unwrapped', 'stdenv.cc.lib']
 
 [phases.build]
 cmds = ['npm install']
