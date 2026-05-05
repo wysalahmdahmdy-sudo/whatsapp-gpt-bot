@@ -1,43 +1,38 @@
-const { default: makeWASocket, DisconnectReason, useMultiFileAuthState } = require('@whiskeysockets/baileys')
-const { Boom } = require('@hapi/boom')
+const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys')
+const pino = require('pino')
 
-async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('session')
-    
+async function start() {
+    console.log('>>> شروع +93706989006')
+    const { state, saveCreds } = await useMultiFileAuthState('auth')
     const sock = makeWASocket({
         auth: state,
-        printQRInTerminal: false,
-        browser: ['Ubuntu', 'Chrome', '22.04.4']
+        logger: pino({ level: 'silent' }),
+        printQRInTerminal: false
     })
 
     sock.ev.on('connection.update', async (update) => {
-        const { connection, lastDisconnect } = update
-        
-        if(connection === 'close') {
-            const shouldReconnect = (lastDisconnect.error)?.output?.statusCode !== DisconnectReason.loggedOut
-            console.log('>>> وصل قطع شو:', lastDisconnect.error, ', بیا وصلېږم:', shouldReconnect)
-            if(shouldReconnect) startBot()
-            
-        } else if(connection === 'open') {
-            console.log('✅✅✅ بوټ وصل شو +93706989006 ✅✅✅')
+        if(update.connection === 'open') {
+            console.log('✅ وصل شو +93706989006')
         }
-        
-        if(update.qr) {
-            console.log('>>> QR راځي خو موږ کوډ غواړو')
+        if(!sock.authState.creds.registered) {
+            const code = await sock.requestPairingCode("93706989006")
+            console.log('>>> 8 رقمي کوډ:', code)
         }
     })
 
-    // 8 رقمي کوډ
-    if(!sock.authState.creds.registered) {
-        setTimeout(async () => {
-            const code = await sock.requestPairingCode("93706989006")
-            console.log('========================================')
-            console.log('>>> 8 رقمي کوډ +93706989006:', code)
-            console.log('>>> WhatsApp > Linked Devices کې یې ولیکه')
-            console.log('========================================')
-        }, 3000)
-    }
-
     sock.ev.on('creds.update', saveCreds)
 
-    sock.ev.on('messages
+    sock.ev.on('messages.upsert', async (m) => {
+        const msg = m.messages[0]
+        if(!msg.message || msg.key.fromMe) return
+        const text = msg.message.conversation || ''
+
+        if(text.includes('سلام')) {
+            await sock.sendMessage(msg.key.remoteJid, { text: 'وعلیکم السلام +93706989006' })
+        } else {
+            await sock.sendMessage(msg.key.remoteJid, { text: 'سلام ولیکه وروره' })
+        }
+    })
+}
+
+start()
