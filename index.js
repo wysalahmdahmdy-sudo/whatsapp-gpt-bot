@@ -1,17 +1,12 @@
 client.on('message', async (message) => {
-    console.log('>>> نوی مسیج:', message.body);
-    console.log('>>> له چا:', message.from);
-    console.log('>>> زما دی:', message.fromMe);
+    console.log('>>> مسیج راغی:', message.body); // د ټیسټ لپاره
     
-    if (message.fromMe) {
-        console.log('>>> خپل مسیج، ځواب نه ورکوم');
-        return;
-    }
+    if (message.fromMe) return; // خپل مسیج ته ځواب مه ورکوه
     
     try {
-        await message.reply('✅ بوټ ژوندی دی! تاسو ولیکل: ' + message.body);
-        console.log('>>> ځواب واستول شو');
+        await message.reply('زما بوټ ځواب: ' + message.body + ' 🤖');
+        console.log('>>> ځواب ولیږل شو');
     } catch (err) {
-        console.log('>>> Error په ځواب کې:', err.message);
+        console.log('>>> Error:', err.message);
     }
 });
