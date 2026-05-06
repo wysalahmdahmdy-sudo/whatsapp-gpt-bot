@@ -1,5 +1,4 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
 const Groq = require('groq-sdk');
 
 const groq = new Groq({
@@ -14,15 +13,17 @@ const client = new Client({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
   },
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-  }
+  pairingCode: true, // همدا 8-رقمي کوډ فعالوي
+  qrMaxRetries: 0
 });
 
-client.on('qr', (qr) => {
-    console.log('QR ووهه که نوی سیشن غواړې');
-    qrcode.generate(qr, { small: true });
+// 8-رقمي کوډ Deploy Logs کې ښیي
+client.on('pairing-code', (code) => {
+    console.log('==============================');
+    console.log('👇 ستا 8-رقمي کوډ همدا دی:');
+    console.log(code);
+    console.log('==============================');
+    console.log('واټساف > Linked Devices > Link with phone number کې یې ولیکه');
 });
 
 client.on('ready', () => {
@@ -30,7 +31,7 @@ client.on('ready', () => {
 });
 
 client.on('message', async (message) => {
-  if (message.body) {
+  if (message.body &&!message.fromMe) {
     try {
       const chatCompletion = await groq.chat.completions.create({
         messages: [
@@ -46,7 +47,6 @@ client.on('message', async (message) => {
       message.reply(reply);
     } catch (error) {
       console.log('Error:', error);
-      message.reply('ستونزه راغله وروره 😓');
     }
   }
 });
