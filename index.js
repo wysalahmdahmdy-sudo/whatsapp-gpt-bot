@@ -1,4 +1,5 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const qrcode = require('qrcode-terminal');
 const Groq = require('groq-sdk');
 
 const groq = new Groq({
@@ -6,76 +7,39 @@ const groq = new Groq({
 });
 
 const client = new Client({
-  authStrategy: new LocalAuth({
-    clientId: "wesal-bot",
-    dataPath: "/tmp/.wwebjs_auth"
-  }),
+  authStrategy: new LocalAuth(),
   puppeteer: {
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--no-zygote',
-      '--single-process'
-    ]
+    args: ['--no-sandbox', '--disable-setuid-sandbox']
   },
-  webVersionCache: {
-    type: 'remote',
-    remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html',
-  }
+  pairingCode: true,
 });
 
-client.on('qr', async (qr) => {
-    console.log('QR راغی - اوس کوډ غواړم...');
-    try {
-        const code = await client.requestPairingCode('93706989006');
-        console.log('\n================================');
-        console.log('🔥🔥 8-رقمي کوډ:', code, '🔥🔥');
-        console.log('================================');
-        console.log('واټساف > Settings > Linked Devices');
-        console.log('> Link a device > Link with phone number');
-        console.log('دا کوډ ولیکه:', code);
-        console.log('================================\n');
-    } catch (err) {
-        console.log('❌ کوډ ستونزه:', err.message);
-    }
+client.on('code', (code) => {
+    console.log('*** Pairing Code:', code, '***');
+    console.log('*** دا کوډ په WhatsApp ولیکه ***');
 });
 
 client.on('ready', () => {
-    console.log('✅ واټساف بوټ چالان شو - ويصال احمد');
-});
-
-client.on('authenticated', () => {
-    console.log('✅ بوټ وصل شو');
-});
-
-client.on('auth_failure', msg => {
-    console.error('❌ وصل نشو:', msg);
+    console.log('بوټ چالان شو ✅');
 });
 
 client.on('message', async (message) => {
-  const text = message.body.toLowerCase();
-  try {
-    if (text.includes('ته څوک یې')) {
-        await message.reply('ځار شم وروره! 🙋‍♂️\nزه ويصال بوټ یم\nما ويصال احمد جوړ کړی یم 💚\n+93706989006');
-        return;
-    }
-    else if (message.body) {
+  if (message.body) {
+    try {
       const chatCompletion = await groq.chat.completions.create({
-        messages: [
-          { role: 'system', content: 'ته ويصال بوټ یې. ويصال احمد دې جوړ کړی یې. په کندهاري پښتو لنډ ځواب ورکوه.' },
-          { role: 'user', content: message.body }
-        ],
+        messages: [{ role: 'user', content: message.body }],
         model: 'llama-3.1-8b-instant'
       });
       const reply = chatCompletion.choices[0]?.message?.content || 'ځواب نشم ورکولی';
-      await message.reply(reply);
+      message.reply(reply);
+    } catch (error) {
+      console.log('Error:', error);
+      message.reply('بخښنه، ستونزه پېښه شوه');
     }
-  } catch (error) {
-    console.log('Error:', error);
   }
 });
 
-client.initialize();
+client.initialize().then(() => {
+  client.requestPairingCode('93706989006');
+});
